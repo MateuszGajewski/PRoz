@@ -1,13 +1,3 @@
-#ifndef FUNCH
-#define FUNCH
-
-#include "main.h"
-
-void getInfoAboutOthers(int pojemnoscEkipy, int *pojemnoscWszystkich, int N);
-void sendPacketToAll(packet_t *pkt, int tag);
-void sendPacket(packet_t *pkt, int destination, int tag);
-
-#endif
 #include "funkcje.h"
 #include "main.h"
 
@@ -32,7 +22,7 @@ void sendPacketToAll(packet_t *pkt, int tag)
     {
          MPI_Send( pkt, 1, MPI_PAKIET_T, i, tag, MPI_COMM_WORLD);
     }
-
+    
     if (freepkt) free(pkt);
 }
 
@@ -44,4 +34,5 @@ void sendPacket(packet_t *pkt, int destination, int tag)
     MPI_Send( pkt, 1, MPI_PAKIET_T, destination, tag, MPI_COMM_WORLD);
     if (freepkt) free(pkt);
 }
+
 

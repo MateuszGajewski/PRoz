@@ -1,4 +1,3 @@
-
 #ifndef FUNCH
 #define FUNCH
 
@@ -9,5 +8,3 @@ void sendPacketToAll(packet_t *pkt, int tag);
 void sendPacket(packet_t *pkt, int destination, int tag);
 
 #endif
-
-

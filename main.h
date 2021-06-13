@@ -59,7 +59,8 @@ extern int EnergiaZ;
 extern int Pair;
 extern state_t prevstate;
 extern int lamportValue; // wartość lamporta
-extern int *clocks; // nazwa jest znacząca, tablica przechowuje indeksy procesów od których otrzymano zgody
+extern int *clocks; 
+extern int *place;
 extern packet_t *msg;
 extern int proba;
 extern int *priorities;
@@ -85,6 +86,4 @@ extern int pair_in;
     #define INACTIVE 17
 
 
-
 #endif
-

@@ -5,7 +5,7 @@
 struct QNode {
         int key;
         int active;
-        int ts;
+	int ts;
         struct QNode* next;
 };
 
@@ -17,4 +17,3 @@ struct Queue {
 struct QNode* newNode(int k, int active, int ts);
 struct Queue* createQueue();
 void enQueue(struct Queue* q, int k, int active, int ts);
-

@@ -11,4 +11,3 @@ int zgodyPunkt6(int id);
 void rozpatrzNaNowo(int what);  // Funkcja, która na nowo rozpatrzy kolejkę po zmiania która nastąpiła o wyjściu z tunelu
 
 #endif
-

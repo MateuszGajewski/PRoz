@@ -9,8 +9,8 @@ struct QNode* newNode(int k, int a, int ts)
         struct QNode* temp = (struct QNode*)malloc(sizeof(struct QNode));
         temp->key = k;
         temp->next = NULL;
-        temp->active = a;
-        temp->ts = ts;
+	temp->active = a;
+	temp->ts = ts;
         return temp;
 }
 
@@ -39,23 +39,26 @@ void delFromQueue(struct Queue* q, int element)
 struct QNode* tmp = q->front;
 struct QNode* prev = NULL;
 while (tmp != NULL){
-        if(tmp->key == element){
-                if(prev == NULL){deQueue(q); return;}
-                else if (tmp->next == NULL){
-                q->rear = prev;
-                prev->next = NULL;
-                free(tmp);
-                return;
-                }
-                else{
-                prev->next = tmp->next;
-                free(tmp);
-                return;
-                }
-                          }
-        prev = tmp;
-        tmp = tmp->next;
-        }
+	if(tmp->key == element){
+		if(prev == NULL){deQueue(q); return;}
+		else if (tmp->next == NULL){
+		q->rear = prev;
+		prev->next = NULL;
+		free(tmp);
+		return;
+		}
+		else{
+		prev->next = tmp->next;
+		free(tmp);
+		return;
+		}
+	
+
+	
+	}
+	prev = tmp;
+	tmp = tmp->next;
+	}
 }
 void insertToq(struct Queue* q, struct QNode* in){
 //printf("debug-1 %d\n", rank);
@@ -70,21 +73,21 @@ q->front = in;
 return;
 }
 while (tmp != NULL){
-        //printf("debug %d\n", in->key);
-        if(tmp->ts > in->ts ||(tmp->ts == in->ts && tmp->key > in->key ) ){
-                if(prev == NULL){q->front = in;  in->next = tmp; return;}
-                else{
-                prev->next = in;
-                in->next = tmp;
-                return;
-                }
+	//printf("debug %d\n", in->key);
+	if(tmp->ts > in->ts ||(tmp->ts == in->ts && tmp->key > in->key ) ){
+		if(prev == NULL){q->front = in;  in->next = tmp; return;}
+		else{
+		prev->next = in;
+		in->next = tmp;
+		return;
+		}
+	
 
-
-
-        }
-        prev = tmp;
-        tmp = tmp->next;
-        }
+	
+	}
+	prev = tmp;
+	tmp = tmp->next;
+	}
 tmp = q->rear;
 q->rear = in;
 tmp->next = in;
@@ -96,17 +99,19 @@ int get_queue_ts(struct Queue* q, int rank){
 int num = 0;
 struct QNode* tmp = q->front;
 while (tmp != NULL){
-if(tmp->key == rank){return tmp->ts;}
+if(tmp->key == rank && tmp->active == 1){return tmp->ts;}
 tmp = tmp->next;
 num+=1;
 }
 return -1;
 }
+
+
 int get_queue_num(struct Queue* q, int rank){
 int num = 0;
 struct QNode* tmp = q->front;
 while (tmp != NULL){
-if(tmp->key == rank){return num;}
+if(tmp->key == rank && tmp->active == 1){return num;}
 tmp = tmp->next;
 num+=1;
 }
@@ -116,7 +121,7 @@ return -1;
 void set_inactive(struct Queue* q, int rank){
 struct QNode* tmp = q->front;
 while (tmp != NULL){
-if(tmp->key == rank){tmp->active = 0; return;}
+if(tmp->key == rank){tmp->active = 0;}
 tmp = tmp->next;
 
 }
@@ -125,13 +130,13 @@ return;
 
 int topProces(int id) //Funkcja zwracajaca id procesu bedacego na szczycie lokalnej kolejki zadan
 {
-
+ 
     return id;
 }
 
 int czyWejde(int tunel) // Funkcja ma na celu sprawdzenie czy w lokalnej kolejce zadan nie istnieje proces o wyzszym priorytecie, ktory chce przejsc w dru
 {
-        return tunel;
+    	return tunel;
 }
 
 void wyczysc(int proces) //Funkcja usuwajaca zadanie z lokalnej kolejki zadan
@@ -148,9 +153,10 @@ int zgodyPunkt5(int id) // Przydzielanie zgod na podstawie punktu 5 algorytmu
 {
     return 0; // w każdym innym wypadku
 }
+
 int zgodyPunkt6(int id) //Przydzielanie zgod na podstawie punktu 6 algorytmu
 {
-
+  
     return 0; // w każdym innym wypadku
 }
 
@@ -169,23 +175,23 @@ void *startKomWatek(void *ptr)
     struct QNode* tmp;
 if (master_type =='X'){
 while(END){
-        MPI_Recv(&pakiet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MSG_TAG, MPI_COMM_WORLD, &status);
+	MPI_Recv(&pakiet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MSG_TAG, MPI_COMM_WORLD, &status);
 if(pakiet.ts > lamportValue){
-                    zwiekszLamporta(pakiet.ts);}
+                    zwiekszLamporta(pakiet.ts);}	
 printf("TYP -[%c] id-[%d] lamp-{%d} - Odbieralem wiadomosc od {%d}, typ %d.\n", master_type, rank, lamportValue, pakiet.id, pakiet.typ);
 
 if(stan == Rest){
 switch ( pakiet.typ ) {
-            case REQX:
-                    pkt->id = rank;
-                 tmp = newNode(pakiet.id, 1, pakiet.ts);
-                 insertToq(WaitQueueX, tmp);
+	    case REQX:
+		    pkt->id = rank;
+		 tmp = newNode(pakiet.id, 1, pakiet.ts);
+		 insertToq(WaitQueueX, tmp);	
                  zwiekszLamporta(-1);
                  pkt->ts = lamportValue;
-                 pkt->typ = ACKX;
-                 if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG);}
-                 //clocks[pakiet.id] = pakiet.ts;
-                 break;
+		 pkt->typ = ACKX;
+		 if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG);}
+		 //clocks[pakiet.id] = pakiet.ts;
+		 break;
             case REQE:
                  pkt->id = rank;
                  tmp = newNode(pakiet.id, 1, pakiet.ts);
@@ -196,25 +202,27 @@ switch ( pakiet.typ ) {
                  pkt->typ = ACKE;
 
                  sendPacket( pkt, pakiet.id, MSG_TAG );
-                 break;
+		 break;
             case RELX:
                 set_inactive(WaitQueueX, pakiet.id);
                 clocks[pakiet.id] = pakiet.ts;
-                break;
+		break;
             case RESET_PAIR:
                 Pair = -1;
-                break;
+		break;
             case OUT:
+		prevstate = stan;
                 zmienStan(NotMyTurn);
-                break;
+		break;
            case NUMBER:
-                printf("num %d\n", pakiet.num);
-                 priorities[pakiet.id] = pakiet.num;
-                 break;
+		printf("num %d\n", pakiet.num);
+                 place[pakiet.id] = pakiet.num;
+		 break;
            case RELE:
+		set_inactive(WaitQueueE, pakiet.id);
                 releaseCount++;
                 break;
-           case ACKE:
+	   case ACKE:
                 clocks[pakiet.id] = pakiet.ts;
                 break;
 }
@@ -222,24 +230,24 @@ switch ( pakiet.typ ) {
 else if(stan == Wait){
 switch ( pakiet.typ ) {
 
-        case REQX:
-                tmp = newNode(pakiet.id, 1, pakiet.ts);
+	case REQX:
+		tmp = newNode(pakiet.id, 1, pakiet.ts);
 
-                insertToq(WaitQueueX, tmp);
-                //clocks[pakiet.id] = pakiet.ts;
-                if((pakiet.ts < get_queue_ts(WaitQueueX, rank))|| (pakiet.ts == get_queue_ts(WaitQueueX, rank) && pakiet.id< rank )){
-                pkt->id = rank;
-                zwiekszLamporta(-1);
-                pkt->ts = lamportValue;
+		insertToq(WaitQueueX, tmp);
+		//clocks[pakiet.id] = pakiet.ts;
+		if((pakiet.ts < get_queue_ts(WaitQueueX, rank))|| (pakiet.ts == get_queue_ts(WaitQueueX, rank) && pakiet.id< rank )){
+		pkt->id = rank;
+		zwiekszLamporta(-1);
+		pkt->ts = lamportValue;
                 pkt->typ = ACKX;
-                sendPacket( pkt, pakiet.id, MSG_TAG );
-                }
-               break;
-        case RELX:
+		sendPacket( pkt, pakiet.id, MSG_TAG );
+		}
+	       break;	
+	case RELX:
                 set_inactive(WaitQueueX, pakiet.id);
                 clocks[pakiet.id] = pakiet.ts;
-                break;
-        case REQE:
+		break;
+	case REQE:
                  pkt->id = rank;
                  tmp = newNode(pakiet.id, 1, pakiet.ts);
                  insertToq(WaitQueueE, tmp);
@@ -249,25 +257,28 @@ switch ( pakiet.typ ) {
                  pkt->typ = ACKE;
 
                  sendPacket( pkt, pakiet.id, MSG_TAG );
-                break;
-        case RELE:
-                releaseCount++;
-                break;
+		break;
+	case RELE:
+		                set_inactive(WaitQueueE, pakiet.id);
+
+		releaseCount++;
+		break;
         case RESET_PAIR:
                 Pair = -1;
                 break;
         case OUT:
+		prevstate = stan;
                 zmienStan(NotMyTurn);
                 break;
 
         case NUMBER:
-                 printf("num %d\n", pakiet.num);
-                 priorities[pakiet.id] = pakiet.num;
+		 printf("num %d\n", pakiet.num);
+                 place[pakiet.id] = pakiet.num;
                  break;
-        case ACKX:
-                 clocks[pakiet.id] = pakiet.ts;
-                 break;
-        case ACKE:
+	case ACKX:
+		 clocks[pakiet.id] = pakiet.ts;
+		 break;
+	case ACKE:
                 clocks[pakiet.id] = pakiet.ts;
                 break;
 
@@ -287,11 +298,63 @@ switch ( pakiet.typ ) {
                  pkt->typ = ACKX;
                  if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG);}
                break;
+	case RELX:
+                set_inactive(WaitQueueX, pakiet.id);
+                clocks[pakiet.id] = pakiet.ts;
+                break;
+	case RELE:
+		                set_inactive(WaitQueueE, pakiet.id);
+
+                releaseCount++;
+                break;
+	case REQE:
+		tmp = newNode(pakiet.id, 1, pakiet.ts);
+		insertToq(WaitQueueE, tmp);
+                //clocks[pakiet.id] = pakiet.ts;
+                if((pakiet.ts < get_queue_ts(WaitQueueE, rank))|| (pakiet.ts == get_queue_ts(WaitQueueE, rank) && pakiet.id< rank )){
+                pkt->id = rank;
+                zwiekszLamporta(-1);
+                pkt->ts = lamportValue;
+                pkt->typ = ACKE;
+                if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG );}
+                }
+               break;
+	case NUMBER:
+                 printf("num %d\n", pakiet.num);
+                 place[pakiet.id] = pakiet.num;
+                 break;
+	case ACKX:
+                 clocks[pakiet.id] = pakiet.ts;
+                 break;
+        case OUT:
+		 if(pakiet.id != rank){
+		 prevstate = stan;
+                zmienStan(NotMyTurn);}
+                break;
+	case ACKE:
+		clocks[pakiet.id] = pakiet.ts;
+		break;
+}
+
+}
+else if(stan ==Taking){
+switch (pakiet.typ){
+	case REQX:
+                 pkt->id = rank;
+                 tmp = newNode(pakiet.id, 1, pakiet.ts);
+                 insertToq(WaitQueueX, tmp);
+                 zwiekszLamporta(-1);
+                 pkt->ts = lamportValue;
+                 pkt->typ = ACKX;
+                 if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG);}
+               break;
         case RELX:
                 set_inactive(WaitQueueX, pakiet.id);
                 clocks[pakiet.id] = pakiet.ts;
                 break;
         case RELE:
+                set_inactive(WaitQueueE, pakiet.id);
+
                 releaseCount++;
                 break;
         case REQE:
@@ -308,26 +371,48 @@ switch ( pakiet.typ ) {
                break;
         case NUMBER:
                  printf("num %d\n", pakiet.num);
-                 priorities[pakiet.id] = pakiet.num;
+                 place[pakiet.id] = pakiet.num;
                  break;
         case ACKX:
                  clocks[pakiet.id] = pakiet.ts;
                  break;
         case OUT:
+                 prevstate = stan;
                 zmienStan(NotMyTurn);
                 break;
         case ACKE:
                 clocks[pakiet.id] = pakiet.ts;
                 break;
-}
+
+	case IN:
+		zmien_pair_in(1);
+		break;
+
 
 }
-else if(stan ==Taking){
-switch (pakiet.typ){
-        case IN:
-                zmien_pair_in(1);
-                break;
 }
+else if (stan == NotMyTurn){
+
+switch(pakiet.typ){
+        case REQX:
+                 pkt->id = rank;
+                 tmp = newNode(pakiet.id, 1, pakiet.ts);
+                 insertToq(WaitQueueX, tmp);
+                 zwiekszLamporta(-1);
+                 pkt->ts = lamportValue;
+                 pkt->typ = ACKX;
+                 if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG);}
+               break;
+        case RELX:
+                set_inactive(WaitQueueX, pakiet.id);
+                clocks[pakiet.id] = pakiet.ts;
+                break;
+
+	case RELZ:
+		EnergiaZ++;
+		break;
+}
+
 }
 }
 }
@@ -370,10 +455,11 @@ switch ( pakiet.typ ) {
                 Pair = -1;
                 break;
             case OUT:
+		prevstate = stan;
                 zmienStan(NotMyTurn);
                 break;
            case NUMBER:
-                 priorities[pakiet.id] = pakiet.num;
+                 place[pakiet.id] = pakiet.num;
                  break;
            case RELE:
                 releaseCount++;
@@ -419,11 +505,12 @@ switch ( pakiet.typ ) {
                 Pair = -1;
                 break;
         case OUT:
+		prevstate = stan;
                 zmienStan(NotMyTurn);
                 break;
 
         case NUMBER:
-                 priorities[pakiet.id] = pakiet.num;
+                 place[pakiet.id] = pakiet.num;
                  break;
         case ACKY:
                  clocks[pakiet.id] = pakiet.ts;
@@ -436,6 +523,41 @@ else if(stan == Paired){
 switch ( pakiet.typ ) {
 
         case REQY:
+		 pkt->id = rank;
+                 tmp = newNode(pakiet.id, 1, pakiet.ts);
+                 insertToq(WaitQueueY, tmp);
+                 zwiekszLamporta(-1);
+                 pkt->ts = lamportValue;
+                 pkt->typ = ACKY;
+                 if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG);}
+                 //clocks[pakiet.id] = pakiet.ts;
+                 break;
+        case OUT:
+		 prevstate = stan;
+                zmienStan(NotMyTurn);
+                break;
+
+        case NUMBER:
+                 place[pakiet.id] = pakiet.num;
+                 break;
+        case ACKY:
+                 clocks[pakiet.id] = pakiet.ts;
+		 break;
+        case RELY:
+                set_inactive(WaitQueueY, pakiet.id);
+                clocks[pakiet.id] = pakiet.ts;
+                break;
+	case IN:
+		zmienStan(Taking);
+		break;
+}
+
+
+}
+
+else if(stan == Taking){
+switch(pakiet.typ){
+ 	case REQY:
                  pkt->id = rank;
                  tmp = newNode(pakiet.id, 1, pakiet.ts);
                  insertToq(WaitQueueY, tmp);
@@ -446,11 +568,12 @@ switch ( pakiet.typ ) {
                  //clocks[pakiet.id] = pakiet.ts;
                  break;
         case OUT:
+		 prevstate = stan;
                 zmienStan(NotMyTurn);
                 break;
 
         case NUMBER:
-                 priorities[pakiet.id] = pakiet.num;
+                 place[pakiet.id] = pakiet.num;
                  break;
         case ACKY:
                  clocks[pakiet.id] = pakiet.ts;
@@ -459,14 +582,55 @@ switch ( pakiet.typ ) {
                 set_inactive(WaitQueueY, pakiet.id);
                 clocks[pakiet.id] = pakiet.ts;
                 break;
-        case IN:
-                zmienStan(Taking);
+	
+	case IN:
+                zmien_pair_in(1);
                 break;
-}
-
 
 }
 }
+else if(stan == NotMyTurn){
+switch(pakiet.typ){
+        case REQY:
+                 pkt->id = rank;
+                 tmp = newNode(pakiet.id, 1, pakiet.ts);
+                 insertToq(WaitQueueY, tmp);
+                 zwiekszLamporta(-1);
+                 pkt->ts = lamportValue;
+                 pkt->typ = ACKY;
+                 if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG);}
+                 //clocks[pakiet.id] = pakiet.ts;
+                 break;
+        case ACKY:
+                 clocks[pakiet.id] = pakiet.ts;
+                 break;
+        case RELY:
+                set_inactive(WaitQueueY, pakiet.id);
+                clocks[pakiet.id] = pakiet.ts;
+                break;
+	case RELZ:
+		EnergiaZ++;
+		break;
+
+}
+}
+}
+}
+else if (master_type == 'Z'){
+while(END){
+MPI_Recv(&pakiet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MSG_TAG, MPI_COMM_WORLD, &status);
+if(pakiet.ts > lamportValue){
+                    zwiekszLamporta(pakiet.ts);}
+printf("TYP -[%c] id-[%d] lamp-{%d} - Odbieralem wiadomosc od {%d}, typ %d.\n", master_type, rank, lamportValue, pakiet.id, pakiet.typ);
+
+if(stan == NotMyTurn){
+switch(pakiet.typ){
+	case OUT:
+		zmienStan(Wait);
+		break;
 }
 }
 
+}
+}
+}
