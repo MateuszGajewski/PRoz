@@ -118,10 +118,13 @@ num+=1;
 return -1;
 }
 
+
+
 void set_inactive(struct Queue* q, int rank){
 struct QNode* tmp = q->front;
+int prev_in =0;
 while (tmp != NULL){
-if(tmp->key == rank){tmp->active = 0;}
+if(tmp->key == rank && tmp->active == 1){tmp->active = 0; return;}
 tmp = tmp->next;
 
 }
@@ -190,7 +193,7 @@ switch ( pakiet.typ ) {
                  pkt->ts = lamportValue;
 		 pkt->typ = ACKX;
 		 if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG);}
-		 //clocks[pakiet.id] = pakiet.ts;
+		 clocks[pakiet.id] = pakiet.ts;
 		 break;
             case REQE:
                  pkt->id = rank;
@@ -200,8 +203,9 @@ switch ( pakiet.typ ) {
                  zwiekszLamporta(-1);
                  pkt->ts = lamportValue;
                  pkt->typ = ACKE;
+		 clocks[pakiet.id] = pakiet.ts;
+		                 sendPacket( pkt, pakiet.id, MSG_TAG );
 
-                 sendPacket( pkt, pakiet.id, MSG_TAG );
 		 break;
             case RELX:
                 set_inactive(WaitQueueX, pakiet.id);
@@ -221,9 +225,18 @@ switch ( pakiet.typ ) {
            case RELE:
 		set_inactive(WaitQueueE, pakiet.id);
                 releaseCount++;
+		clocks[pakiet.id] = pakiet.ts;
+
                 break;
 	   case ACKE:
                 clocks[pakiet.id] = pakiet.ts;
+                break;
+        case STOP:
+                prevprevstate = stan;
+                zmienStan(Updated_queue);
+		deleter = pakiet.id;
+                how_many_del = pakiet.num;
+
                 break;
 }
 }
@@ -255,11 +268,13 @@ switch ( pakiet.typ ) {
                  zwiekszLamporta(-1);
                  pkt->ts = lamportValue;
                  pkt->typ = ACKE;
+		                 clocks[pakiet.id] = pakiet.ts;
 
                  sendPacket( pkt, pakiet.id, MSG_TAG );
 		break;
 	case RELE:
 		                set_inactive(WaitQueueE, pakiet.id);
+			                 clocks[pakiet.id] = pakiet.ts;
 
 		releaseCount++;
 		break;
@@ -280,6 +295,13 @@ switch ( pakiet.typ ) {
 		 break;
 	case ACKE:
                 clocks[pakiet.id] = pakiet.ts;
+                break;
+        case STOP:
+                prevprevstate = stan;
+                zmienStan(Updated_queue);
+		                deleter = pakiet.id;
+                how_many_del = pakiet.num;
+
                 break;
 
 }
@@ -303,7 +325,9 @@ switch ( pakiet.typ ) {
                 clocks[pakiet.id] = pakiet.ts;
                 break;
 	case RELE:
-		                set_inactive(WaitQueueE, pakiet.id);
+		                 clocks[pakiet.id] = pakiet.ts;
+
+		set_inactive(WaitQueueE, pakiet.id);
 
                 releaseCount++;
                 break;
@@ -316,6 +340,8 @@ switch ( pakiet.typ ) {
                 zwiekszLamporta(-1);
                 pkt->ts = lamportValue;
                 pkt->typ = ACKE;
+		                 //clocks[pakiet.id] = pakiet.ts;
+		
                 if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG );}
                 }
                break;
@@ -334,6 +360,13 @@ switch ( pakiet.typ ) {
 	case ACKE:
 		clocks[pakiet.id] = pakiet.ts;
 		break;
+        case STOP:
+		                deleter = pakiet.id;
+                how_many_del = pakiet.num;
+
+                prevprevstate = stan;
+                zmienStan(Updated_queue);
+                break;
 }
 
 }
@@ -354,6 +387,7 @@ switch (pakiet.typ){
                 break;
         case RELE:
                 set_inactive(WaitQueueE, pakiet.id);
+                 clocks[pakiet.id] = pakiet.ts;
 
                 releaseCount++;
                 break;
@@ -361,13 +395,15 @@ switch (pakiet.typ){
                 tmp = newNode(pakiet.id, 1, pakiet.ts);
                 insertToq(WaitQueueE, tmp);
                 //clocks[pakiet.id] = pakiet.ts;
-                if((pakiet.ts < get_queue_ts(WaitQueueE, rank))|| (pakiet.ts == get_queue_ts(WaitQueueE, rank) && pakiet.id< rank )){
+               
                 pkt->id = rank;
                 zwiekszLamporta(-1);
                 pkt->ts = lamportValue;
                 pkt->typ = ACKE;
-                if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG );}
-                }
+                 clocks[pakiet.id] = pakiet.ts;
+
+		if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG );}
+               
                break;
         case NUMBER:
                  printf("num %d\n", pakiet.num);
@@ -387,6 +423,13 @@ switch (pakiet.typ){
 	case IN:
 		zmien_pair_in(1);
 		break;
+        case STOP:
+                prevprevstate = stan;
+                zmienStan(Updated_queue);
+		                deleter = pakiet.id;
+                how_many_del = pakiet.num;
+
+                break;
 
 
 }
@@ -411,9 +454,171 @@ switch(pakiet.typ){
 	case RELZ:
 		EnergiaZ++;
 		break;
+        case STOP:
+		                deleter = pakiet.id;
+                how_many_del = pakiet.num;
+
+                prevprevstate = stan;
+                zmienStan(Updated_queue);
+                break;
+        case RELE:
+                set_inactive(WaitQueueE, pakiet.id);
+                 clocks[pakiet.id] = pakiet.ts;
+
+                releaseCount++;
+                break;
+        case REQE:
+                tmp = newNode(pakiet.id, 1, pakiet.ts);
+                insertToq(WaitQueueE, tmp);
+                //clocks[pakiet.id] = pakiet.ts;
+                if((pakiet.ts < get_queue_ts(WaitQueueE, rank))|| (pakiet.ts == get_queue_ts(WaitQueueE, rank) && pakiet.id< rank )){
+                pkt->id = rank;
+                zwiekszLamporta(-1);
+                                 clocks[pakiet.id] = pakiet.ts;
+
+		pkt->ts = lamportValue;
+                pkt->typ = ACKE;
+                if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG );}
+                }
+               break;
+        case NUMBER:
+                 printf("num %d\n", pakiet.num);
+                 place[pakiet.id] = pakiet.num;
+                 break;
+        case ACKX:
+                 clocks[pakiet.id] = pakiet.ts;
+                 break;
+        case ACKE:
+                clocks[pakiet.id] = pakiet.ts;
+                break;
+
 }
 
 }
+else if(stan == Updated_queue){
+switch(pakiet.typ){
+	case STOP:
+		for(int i = 0; i < pakiet.num; i++){
+                        deQueue(WaitQueueX);
+                        }
+		pkt->id = rank;
+                zwiekszLamporta(-1);
+                pkt->ts = lamportValue;
+                pkt->typ = STOP;
+                sendPacket( pkt, pakiet.id, MSG_TAG );
+	case START:
+		cleared1 = 0;
+		zmienStan(prevprevstate);
+		break;
+        case RELZ:
+                EnergiaZ++;
+                break;
+case REQX:
+                 pkt->id = rank;
+                 tmp = newNode(pakiet.id, 1, pakiet.ts);
+                 insertToq(WaitQueueX, tmp);
+                 zwiekszLamporta(-1);
+                 pkt->ts = lamportValue;
+                 pkt->typ = ACKX;
+                 if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG);}
+               break;
+        case RELX:
+                set_inactive(WaitQueueX, pakiet.id);
+                clocks[pakiet.id] = pakiet.ts;
+                break;
+        case RELE:
+                set_inactive(WaitQueueE, pakiet.id);
+                 clocks[pakiet.id] = pakiet.ts;
+
+                releaseCount++;
+                break;
+        case REQE:
+                tmp = newNode(pakiet.id, 1, pakiet.ts);
+                insertToq(WaitQueueE, tmp);
+                //clocks[pakiet.id] = pakiet.ts;
+                if((pakiet.ts < get_queue_ts(WaitQueueE, rank))|| (pakiet.ts == get_queue_ts(WaitQueueE, rank) && pakiet.id< rank )){
+                pkt->id = rank;
+                zwiekszLamporta(-1);
+                pkt->ts = lamportValue;
+                 clocks[pakiet.id] = pakiet.ts;
+
+		pkt->typ = ACKE;
+                if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG );}
+                }
+               break;
+        case NUMBER:
+                 printf("num %d\n", pakiet.num);
+                 place[pakiet.id] = pakiet.num;
+                 break;
+        case ACKX:
+                 clocks[pakiet.id] = pakiet.ts;
+                 break;
+        case ACKE:
+                clocks[pakiet.id] = pakiet.ts;
+                break;
+
+}
+
+}
+else if(stan == Updaiting_queue){
+switch(pakiet.typ){
+	case STOP:
+		ans_count++;
+		break;
+        case RELZ:
+                EnergiaZ++;
+                break;
+
+case REQX:
+                 pkt->id = rank;
+                 tmp = newNode(pakiet.id, 1, pakiet.ts);
+                 insertToq(WaitQueueX, tmp);
+                 zwiekszLamporta(-1);
+                 pkt->ts = lamportValue;
+                 pkt->typ = ACKX;
+                 if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG);}
+               break;
+        case RELX:
+                set_inactive(WaitQueueX, pakiet.id);
+                clocks[pakiet.id] = pakiet.ts;
+                break;
+
+
+        case RELE:
+                set_inactive(WaitQueueE, pakiet.id);
+                 clocks[pakiet.id] = pakiet.ts;
+
+                releaseCount++;
+                break;
+        case REQE:
+                tmp = newNode(pakiet.id, 1, pakiet.ts);
+                insertToq(WaitQueueE, tmp);
+                //clocks[pakiet.id] = pakiet.ts;
+                if((pakiet.ts < get_queue_ts(WaitQueueE, rank))|| (pakiet.ts == get_queue_ts(WaitQueueE, rank) && pakiet.id< rank )){
+                pkt->id = rank;
+                zwiekszLamporta(-1);
+                pkt->ts = lamportValue;
+                pkt->typ = ACKE;
+                 clocks[pakiet.id] = pakiet.ts;
+
+		if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG );}
+                }
+               break;
+        case NUMBER:
+                 printf("num %d\n", pakiet.num);
+                 place[pakiet.id] = pakiet.num;
+                 break;
+        case ACKX:
+                 clocks[pakiet.id] = pakiet.ts;
+                 break;
+        case ACKE:
+                clocks[pakiet.id] = pakiet.ts;
+                break;
+
+}
+
+}
+
 }
 }
 else if (master_type == 'Y'){
@@ -464,7 +669,13 @@ switch ( pakiet.typ ) {
            case RELE:
                 releaseCount++;
                 break;
+        case STOP:
+                deleter = pakiet.id;
+                how_many_del = pakiet.num;
 
+                prevprevstate = stan;
+                zmienStan(Updated_queue);
+                break;
 }
 }
 else if(stan == Wait){
@@ -515,6 +726,13 @@ switch ( pakiet.typ ) {
         case ACKY:
                  clocks[pakiet.id] = pakiet.ts;
                  break;
+        case STOP:
+                deleter = pakiet.id;
+                how_many_del = pakiet.num;
+
+                prevprevstate = stan;
+                zmienStan(Updated_queue);
+                break;
 
 }
 
@@ -550,6 +768,13 @@ switch ( pakiet.typ ) {
 	case IN:
 		zmienStan(Taking);
 		break;
+        case STOP:
+                deleter = pakiet.id;
+                how_many_del = pakiet.num;
+
+                prevprevstate = stan;
+                zmienStan(Updated_queue);
+                break;
 }
 
 
@@ -586,6 +811,13 @@ switch(pakiet.typ){
 	case IN:
                 zmien_pair_in(1);
                 break;
+	case STOP:
+		                deleter = pakiet.id;
+                how_many_del = pakiet.num;
+
+                prevprevstate = stan;
+                zmienStan(Updated_queue);
+                break;
 
 }
 }
@@ -611,9 +843,65 @@ switch(pakiet.typ){
 	case RELZ:
 		EnergiaZ++;
 		break;
+	case NUMBER:
+                 place[pakiet.id] = pakiet.num;
+                 break;
+
+
+	case STOP:
+                deleter = pakiet.id;
+                how_many_del = pakiet.num;
+
+		prevprevstate = stan;
+		zmienStan(Updated_queue);
+		break;
 
 }
 }
+else if(stan == Updated_queue){
+switch(pakiet.typ){
+	        case STOP:
+                for(int i = 0; i < pakiet.num; i++){
+                        deQueue(WaitQueueY);
+                        }
+		pkt->id = rank;
+                zwiekszLamporta(-1);
+                pkt->ts = lamportValue;
+                pkt->typ = STOP;
+                sendPacket( pkt, pakiet.id, MSG_TAG );
+        case START:
+
+                zmienStan(prevprevstate);
+		cleared1 = 0;
+                break;
+	case RELZ:
+                EnergiaZ++;
+                break;
+        case REQY:
+                 pkt->id = rank;
+                 tmp = newNode(pakiet.id, 1, pakiet.ts);
+                 insertToq(WaitQueueY, tmp);
+                 zwiekszLamporta(-1);
+                 pkt->ts = lamportValue;
+                 pkt->typ = ACKY;
+                 if(pakiet.id != rank) {sendPacket( pkt, pakiet.id, MSG_TAG);}
+                 //clocks[pakiet.id] = pakiet.ts;
+                 break;
+        case ACKY:
+                 clocks[pakiet.id] = pakiet.ts;
+                 break;
+        case RELY:
+                set_inactive(WaitQueueY, pakiet.id);
+                clocks[pakiet.id] = pakiet.ts;
+                break;
+        case NUMBER:
+                 place[pakiet.id] = pakiet.num;
+                 break;
+
+}
+
+}
+
 }
 }
 else if (master_type == 'Z'){

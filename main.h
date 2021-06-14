@@ -58,6 +58,7 @@ extern struct Queue* WaitQueueY;
 extern int EnergiaZ;
 extern int Pair;
 extern state_t prevstate;
+extern state_t prevprevstate;
 extern int lamportValue; // wartość lamporta
 extern int *clocks; 
 extern int *place;
@@ -67,6 +68,12 @@ extern int *priorities;
 extern int curr_pair;
 extern int count_rel_e;
 extern int pair_in;
+extern int ans_count;
+extern int deleter;
+extern int how_many_del;
+extern int cleared1;
+
+
     #define REQX 1
     #define REQY 2
     #define ACKX 3
@@ -81,7 +88,7 @@ extern int pair_in;
     #define RESET_PAIR 12
     #define RELZ 13
     #define NUMBER 14
-    #define Stop 15
+    #define STOP 15
     #define START 16
     #define INACTIVE 17
 

@@ -30,7 +30,7 @@ struct Queue* WaitQueueZ;
 struct Queue* WaitQueueY;
 int EnergiaZ = 0;
 int Pair;
-state_t prevstate;
+state_t prevstate, prevprevstate;
 int lamport;
 char master_type;
 int *priorities;
@@ -38,6 +38,11 @@ int send_num = 0;
 int curr_pair = -1;
 int pair_in = 0;
 int cleared = 0;
+int cleared1 = 0;
+int send_stop = 0;
+int ans_count = 0;
+int deleter =-1;
+int how_many_del = 0;
 struct Queue* createQueue()
 {
         struct Queue* q = (struct Queue*)malloc(sizeof(struct Queue));
@@ -206,25 +211,38 @@ return num;}
 int can_get_to_crit_section(){
 
 	for(int i = 0; i < X; i++){
-		int active  = check_if_in_queue(WaitQueueE, i);
-//printf("i- %d, act- %d\n", i, active);
+		int active  = check_active(WaitQueueE, i);
+printf("rank- %d, i- %d, act- %d\n",rank, i, active);
 	if(i != rank && active == -1){
 	if((clocks[i]< get_queue_ts(WaitQueueE, rank)) || (clocks[i]== get_queue_ts(WaitQueueE, rank) && i< rank )){return -1;}
 	}
 	}
 
 int num = get_queue_num(WaitQueueE, rank);
+printf("rank- %d, numm-  %d\n",rank, num);
 
 return num;
 }
 
+int what_to_del(){
+
+struct QNode* tmp = WaitQueueX->front;
+int num = 0;
+while (tmp != NULL){
+if(tmp->active == 1){num++;}
+else if(tmp->active == 1){ return num;}
+tmp = tmp->next;
+}
+return num;
+
+
+}
 
 int check_if_pair_exists(int num){
 
 	if (master_type == 'X'){
 	
 	for(int i = X; i< X+Y; i++){
-	printf("Rank: %d, i: %d, prio: %d \n", rank, i, place[i]);
 	if(place[i] == num){return i;}
 	}
 	
@@ -272,7 +290,7 @@ int main(int argc,char **argv)
 
     int proba = 80; 
     int proba1 = 80;
-    srand( time(NULL) + rank );
+    srand(rank );
 
     printf("TYP -[%c] id-[%d] lamp-{%d}- Zaczniemy za 3 sekundy ... \n\n", master_type, rank, lamportValue);
     sleep(3);
@@ -335,6 +353,7 @@ int main(int argc,char **argv)
                 sendPacketToAll(pkt,MSG_TAG);
                 send_num = 1;
 		printf("TYP -[%c] id-[%d] lamp-{%d} - jestem w stanie paired, wysylam REQE\n", master_type, rank, lamportValue);
+		
 
         }
 	int num = can_get_to_crit_section();
@@ -351,7 +370,7 @@ int main(int argc,char **argv)
 
 	}
 	else if(num == Z){
-	        printf("TYP -[%c] id-[%d] lampi-{%d} - jestem w stanie paired, brak jednostek energii %d\n", master_type, rank, lamportValue);
+	        printf("TYP -[%c] id-[%d] lampi-{%d} - jestem w stanie paired, brak jednostek energii\n", master_type, rank, lamportValue);
 		if(releaseCount == Z){
                 zwiekszLamporta(-1);
                 pkt->ts = lamportValue;
@@ -363,13 +382,12 @@ int main(int argc,char **argv)
 		}
 	}
 	else{
-	                printf("TYP -[%c] id-[%d] lamp-{%d} - jestem w stanie paired, brak jednostek energii %d\n", master_type, rank, lamportValue);
+	                printf("TYP -[%c] id-[%d] lamp-{%d} - jestem w stanie paired, brak jednostek energii \n", master_type, rank, lamportValue);
 
 	}
 	
         }
 	else if(stan == Taking){
-		printf("takingggg");
 	if(pair_in == 1){
 		printf("TYP -[%c] id-[%d] lamp-{%d} - jestem w stanie taking, moja para tez, czerpie moc\n", master_type, rank, lamportValue);
 		int los = rand()%100;
@@ -382,7 +400,7 @@ int main(int argc,char **argv)
                 	sendPacket(pkt, curr_pair,MSG_TAG);
 			priorities[rank] = -1;
 			clocks[curr_pair] = -1;
-			zmienStan(Rest);
+			
 			curr_pair = -1;
 			pair_in = 0;
 		zwiekszLamporta(-1);
@@ -391,7 +409,8 @@ int main(int argc,char **argv)
                 pkt->typ = RELE;
                 sendPacketToAll(pkt,MSG_TAG);
 		send_num = 0;		
-		
+		if(place[rank] == -3){prevprevstate = Rest,  zmienStan(Updaiting_queue);}		
+		zmienStan(Rest);
 		}
 
 	}
@@ -414,6 +433,55 @@ int main(int argc,char **argv)
 		cleared = 0;
 		releaseCount -=Z;
 		}
+	}
+	else if(stan == Updated_queue){
+	
+                printf("TYP -[%c] id-[%d] lamp-{%d} - jestem w stanie Udated_queue, usuwam z kolejki, deleter = %d\n", master_type, rank, lamportValue, how_many_del);
+		                if(cleared1 == 0){
+                 for(int i = 0; i < how_many_del; i++){
+                        deQueue(WaitQueueX);
+                        }
+                pkt->id = deleter;
+                zwiekszLamporta(-1);
+                pkt->ts = lamportValue;
+                pkt->typ = STOP;
+                sendPacket( pkt, deleter, MSG_TAG );
+                cleared = 1;
+		send_num = 0;
+		for (int i = 0 ; i<X+Y+Z; i++){place[i]=-1;}
+                }
+
+	
+	}
+	else if(stan == Updaiting_queue){
+	                printf("TYP -[%c] id-[%d] lamp-{%d} - jestem w stanie Udating_queue, usuwam z kolejki\n", master_type, rank, lamportValue);
+
+		if(send_stop == 0){
+			int num = what_to_del();
+			zwiekszLamporta(-1);
+                        pkt->ts = lamportValue;
+                        pkt->id = rank;
+                        pkt->typ = STOP;
+			pkt->num = num;
+                        sendPacketToAll(pkt,MSG_TAG);
+			send_stop = 1;
+			for(int i = 0; i < num; i++){
+			deQueue(WaitQueueX);
+			}
+			for (int i = 0 ; i<X+Y+Z; i++){place[i]=-1;}
+	}
+	if(ans_count == X+Y){send_stop = 0;
+	zwiekszLamporta(-1);
+                        pkt->ts = lamportValue;
+                        pkt->id = rank;
+                        pkt->typ = START;
+                        sendPacketToAll(pkt,MSG_TAG);
+			ans_count = 0;
+			zmienStan(prevprevstate);
+	
+	}
+
+	
 	}
         sleep(1); // zamrożenie stanu
 
@@ -513,6 +581,23 @@ int main(int argc,char **argv)
                 }
         
 	}
+	        else if(stan == Updated_queue){
+                printf("TYP -[%c] id-[%d] lamp-{%d} - jestem w stanie Udated_queue, usuwam z kolejki\n", master_type, rank, lamportValue);
+		if(cleared1 == 0){
+		 for(int i = 0; i < how_many_del; i++){
+                        deQueue(WaitQueueY);
+                        }
+                pkt->id = deleter;
+                zwiekszLamporta(-1);
+                pkt->ts = lamportValue;
+                pkt->typ = STOP;
+                sendPacket( pkt, deleter, MSG_TAG );
+		cleared1 = 1;
+		send_num =0;
+		for (int i = 0 ; i<X+Y+Z; i++){place[i]=-1;}
+		}
+
+        }
 	
         sleep(1); // zamrożenie stanu
     
